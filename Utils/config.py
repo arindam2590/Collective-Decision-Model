@@ -36,10 +36,10 @@ def set_params():
         'INTERACTION_RADIUS' : 30,
         'CONSENSUS_PERIOD' : 10,
         'AGENT_SPEED' : 1.0,
-        'SEPERATION_DISTANCE' : 35,
-        'SEPERATION_STRENGTH' : 0.27,
+        'SEPERATION_DISTANCE' : 25,
+        'SEPERATION_STRENGTH' : 0.17,
         'ALIGNMENT_STRENGTH' : 0.08,
-        'ATTRACT_STRENGTH' : 0.0002,
+        'ATTRACT_STRENGTH' : 0.002,
         'REPULSION_RADIUS' : 50,
         'K_INCREMENT' : 0.01
     }
