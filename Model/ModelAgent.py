@@ -1,79 +1,81 @@
 import random
-#import math
 import numpy as np
 
-from Environment.SimAgent import Agent
+from Environment.SimAgent import Agent, angle_diff
+
 
 class MajorityAgent(Agent):
     def __init__(self, pos, is_latent, bound_x, bound_y, interaction_radius, repulsion_radius, sep_dist, speed, opn_count):
-        super().__init__(pos, speed, bound_x-10, bound_y-10, interaction_radius, repulsion_radius, sep_dist)
+        super().__init__(pos, speed, bound_x - 10, bound_y - 10, interaction_radius, repulsion_radius, sep_dist)
         self.is_latent = is_latent
         self.consensus_direction = 0.0
         self.opinion_count = opn_count
         self.has_consensus = False
         self.nearest_goal = None
-        #self.reached_goal = False
-        #self.collided_with_obstacle = False
-        
+
     def display_agents(self, screen):
         super().draw_agents(screen)
-        
+
     def calculate_dir_mismatch(self):
-        return abs(self.consensus_direction - self.direction)
-        
+        return abs(angle_diff(self.consensus_direction, self.direction))
+
     def count_opinion_occurance(self, targets):
         for neighbor in self.neighbors:
+            if neighbor.nearest_goal is None:
+                continue
             goal = tuple(neighbor.nearest_goal)
+            if goal not in self.opinion_count:
+                self.opinion_count[goal] = 0
             self.opinion_count[goal] += 1
             max_occurance = max(self.opinion_count, key=self.opinion_count.get)
-            if tuple(self.nearest_goal) != max_occurance:
+            if self.nearest_goal is None or tuple(self.nearest_goal) != max_occurance:
                 self.nearest_goal = np.array(max_occurance)
-                
+
+
 class VoterAgent(Agent):
     def __init__(self, pos, is_latent, targets, bound_x, bound_y, interaction_radius, repulsion_radius, sep_dist, speed):
-        super().__init__(pos, speed, bound_x-10, bound_y-10, interaction_radius, repulsion_radius, sep_dist)
+        super().__init__(pos, speed, bound_x - 10, bound_y - 10, interaction_radius, repulsion_radius, sep_dist)
         self.is_latent = is_latent
         self.consensus_direction = 0.0
         self.nearest_goal = random.choice(targets)
         self.has_switched_opinion = False
-        
+
     def display_agents(self, screen):
         super().draw_agents(screen)
-        
+
     def switch_opinion(self):
         if self.neighbors:
             random_neighbor = random.choice(self.neighbors)
-            if np.array_equal(self.nearest_goal, random_neighbor.nearest_goal):
+            if self.nearest_goal is not None and random_neighbor.nearest_goal is not None and np.array_equal(self.nearest_goal, random_neighbor.nearest_goal):
                 self.direction = self.consensus_direction
-            else:            
+            else:
                 self.nearest_goal = random_neighbor.nearest_goal
                 self.direction = random_neighbor.consensus_direction
             self.has_switched_opinion = True
-            
+
+
 class KuramotoAgent(Agent):
     def __init__(self, pos, is_latent, bound_x, bound_y, interaction_radius, repulsion_radius, sep_dist, speed):
-        super().__init__(pos, speed, bound_x-10, bound_y-10, interaction_radius, repulsion_radius, sep_dist)
+        super().__init__(pos, speed, bound_x - 10, bound_y - 10, interaction_radius, repulsion_radius, sep_dist)
         self.is_latent = is_latent
         self.omega = 0.0
         self.nearest_goal = None
         self.consensus_direction = 0.0
         self.has_phase_synched = True
         self.coupling_strength_K = 0.0
-        
+
     def display_agents(self, screen):
         super().draw_agents(screen)
-        
-    def calculate_phase_difference(self):
+
+    def calculate_phase_difference(self, K=0.8):
         if self.neighbors:
-            K = 0.8
             neighbor_directions = np.array([agent.direction for agent in self.neighbors])
-            avg_phase_diff = K * np.mean(np.sin(neighbor_directions-self.direction), axis=0)
+            avg_phase_diff = K * np.mean(np.sin(neighbor_directions - self.direction), axis=0)
             agent_phase = self.omega + avg_phase_diff
             direction = np.array([np.cos(agent_phase), np.sin(agent_phase)])
             self.consensus_direction = np.arctan2(direction[1], direction[0])
             self.has_phase_synched = True
-            #print(neighbor_directions)
-        
+
     def get_nearest_goal(self, targets):
         targets = np.array(targets)
         distance_to_goal = np.linalg.norm(targets - self.position, axis=1)

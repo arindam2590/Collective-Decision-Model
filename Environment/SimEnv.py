@@ -26,9 +26,14 @@ class SimEnv:
         self.target_size = self.env_params['TARGET_SIZE']
         self.model = None
 
+        # Centralized metrics store
+        self.metrics = {"time": [], "dir_mismatch": [], "consensus_counts": []}
+
     def event_on_game_window(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.running = False
 
     def hurdle_movement(self, time_count):
@@ -36,8 +41,8 @@ class SimEnv:
             hurdle.update_hurdle_position(time_count)
 
     def draw_targets(self, point):
-        x, y = point[0], point[1]
-        pygame.draw.circle(self.screen, (0, 0, 255), (int(x), int(y)), self.target_size)
+        x, y = int(point[0]), int(point[1])
+        pygame.draw.circle(self.screen, (0, 0, 255), (x, y), int(self.target_size))
 
     def render(self):
         for agent in self.model.agents:
@@ -52,33 +57,25 @@ class SimEnv:
         pygame.display.flip()
         self.clock.tick(self.fps)
 
-    def run_simulation(self, hurdles, targets):
+    def run_simulation(self, hurdles, targets, max_steps=None):
         pygame.display.set_caption("Collective Decision Making of Swarm : " + self.model.Name)
 
-        direction_mismatches = []
-        performance_data = []
-        # collision_values = []
-        # obstacle_navigation_values = []
-        # consensus_decision_accuracy = []
-        metrics = [direction_mismatches]  # , collision_values, obstacle_navigation_values, consensus_decision_accuracy]
-
-        for hurdle in hurdles:
-            x, y, amplitude, frequency = hurdle
+        # build hurdle objects
+        for x, y, amplitude, frequency in hurdles:
             self.hurdles.append(Hurdle(x, y, amplitude, frequency))
 
-        print('=' * 60)
-        print('Model Simulation has been started...\n')
         time_count = 1
-        while self.running:
+        while self.running and (max_steps is None or time_count <= max_steps):
             self.event_on_game_window()
             self.screen.fill(self.BGCOLOR)
             self.hurdle_movement(time_count)
-            performance_data = self.model.update(time_count, self.hurdles, metrics)
+            self.metrics["time"].append(time_count)
+
+            self.model.update(time_count, self.hurdles, self.metrics)
             self.render()
             time_count += 1
 
-        performance_data.append(time_count)
-        return performance_data
+        return self.metrics
 
     def close_sim(self):
         pygame.quit()
