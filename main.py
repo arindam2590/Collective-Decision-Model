@@ -1,18 +1,15 @@
 from Environment.SimEnv import SimEnv
-from Utils.utils import setup_perser, simulation_init, read_from_file
+from Utils.config import setup_perser, set_params
+from Utils.utils import display_simulation_config, simulation_init, read_from_file, plot_performance_graph
 from Model.CollectiveDecisionModel import MajorityRuleModel, VoterModel, KuramotoModel
 
-#parameters
-WIDTH = 900
-HEIGHT = 500
-NUM_AGENTS = 20
-NUM_TARGET = 2
-NUM_HURDLE = 10
 
 # Defining the main function
 def main():
+    params = set_params()
+
     print('\n')
-    print('%'*60)
+    print('%' * 60)
     if args.newdata:
         is_new_data = True
         print('Simulation has been started with New Data')
@@ -20,32 +17,35 @@ def main():
         is_new_data = False
         print('Simulation has been started with Old Data')
 
-    
+    display_simulation_config(params)
     if is_new_data:
-        simulation_init(WIDTH, HEIGHT, NUM_AGENTS, NUM_TARGET, NUM_HURDLE)
-    
+        simulation_init(params)
+
     data_list = read_from_file()
     agent_pos = [tuple(element) for element in data_list[0]]
     targets = [tuple(element) for element in data_list[1]]
-    hurdles = [tuple(element) for element in data_list[2]] 
-    simEnv = SimEnv(WIDTH, HEIGHT, NUM_AGENTS, NUM_TARGET, targets, NUM_HURDLE, hurdles)
-    
+    hurdles = [tuple(element) for element in data_list[2]]
+
+    simEnv = SimEnv(params, targets)
     if args.majority:
-        simEnv.model = MajorityRuleModel(agent_pos, NUM_TARGET, targets)
-        print('Model Select : ', simEnv.model.Name)
+        simEnv.model = MajorityRuleModel(agent_pos, targets, params)
+        print('Model Select :', simEnv.model.Name)
     elif args.voter:
-        simEnv.model = VoterModel(agent_pos)
+        simEnv.model = VoterModel(agent_pos, targets, params)
         print('Model Select : ', simEnv.model.Name)
     elif args.kuramoto:
-        simEnv.model = KuramotoModel(agent_pos)
+        simEnv.model = KuramotoModel(agent_pos, targets, params)
         print('Model Select : ', simEnv.model.Name)
     else:
         print('No Model is selected')
-        
-    simEnv.run_simulation()
-        
+
+    performance_data = simEnv.run_simulation(hurdles, targets)
+
+    plot_performance_graph(simEnv.model.Name, performance_data)
+
     simEnv.close_sim()
-    
-if __name__=="__main__":
+
+
+if __name__ == "__main__":
     args = setup_perser()
     main()
