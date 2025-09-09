@@ -35,6 +35,7 @@ def set_params():
     swarm_params = {
         'NUM_AGENTS' : 10,
         'START_AREA_LEN' : 20,
+        'STARTING_AREA_WIDTH' : 20,
         'INTERACTION_RADIUS' : 30,
         'CONSENSUS_PERIOD' : 10,
         'AGENT_SPEED' : 1.0,
