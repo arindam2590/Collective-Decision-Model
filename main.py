@@ -39,9 +39,9 @@ def main():
     else:
         print('No Model is selected')
 
-    performance_data = simEnv.run_simulation(hurdles, targets)
+    performance_data = simEnv.run_simulation(hurdles, targets, max_steps=args.max_steps)
 
-    plot_performance_graph(simEnv.model.Name, performance_data)
+    plot_performance_graph(simEnv.model.Name, performance_data, params)
 
     simEnv.close_sim()
 

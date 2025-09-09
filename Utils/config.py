@@ -1,34 +1,36 @@
 import argparse
 
-def setup_parser():
+def setup_perser():
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('-n', '--newdata',
                         action='store_true',
-                        help='Start simulation with new data: use argument -n or --newdata')
+                        help='Start simulation with new data')
     parser.add_argument('-o', '--olddata',
                         action='store_true',
-                        help='Start simulation with old data: use argument -o or --olddata')
+                        help='Start simulation with old data')
     parser.add_argument('-m', '--majority',
                         action='store_true',
-                        help='Simulate the environment with Majority Rule Model: use argument -m or --majority')
+                        help='Use Majority Rule Model')
     parser.add_argument('-v', '--voter',
                         action='store_true',
-                        help='Simulate the environment with Voter Model: use argument -v or --voter')
+                        help='Use Voter Model')
     parser.add_argument('-k', '--kuramoto',
                         action='store_true',
-                        help='Simulate the environment with Kuramoto Model: use argument -k or --kuramoto')
+                        help='Use Kuramoto Model')
+    parser.add_argument('-t', '--max-steps',
+                        type=int,
+                        default=0,
+                        help='Maximum number of time steps to run (0 = run until window closed)')
     return parser.parse_args()
 
 # Backward-compatible alias (so main.py keeps working without edits)
-def setup_perser():
-    return setup_parser()
 
 
 def set_params():
     env_params = {
         'FULSCRN': False,
         'SCREEN_WIDTH': 1200,
-        'SCREEN_HEIGHT': 700,
+        'SCREEN_HEIGHT': 900,
         'FPS': 60,
         'NUM_TARGET': 2,
         'TARGET_SIZE': 20,

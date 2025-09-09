@@ -54,28 +54,30 @@ class SimEnv:
         pygame.display.flip()
         self.clock.tick(self.fps)
 
-    def run_simulation(self, hurdles, targets):
+    def run_simulation(self, hurdles, targets, max_steps=0):
         pygame.display.set_caption("Collective Decision Making of Swarm : " + self.model.Name)
 
         direction_mismatches = []
-        metrics = [direction_mismatches]  # keep existing structure
+        performance_data = []
+        metrics = [direction_mismatches]
 
-        for x, y, amplitude, frequency in hurdles:
+        for hurdle in hurdles:
+            x, y, amplitude, frequency = hurdle
             self.hurdles.append(Hurdle(x, y, amplitude, frequency))
 
         print('=' * 60)
         print('Model Simulation has been started...\n')
         time_count = 1
         while self.running:
+            if max_steps > 0 and time_count > max_steps:
+                break
             self.event_on_game_window()
             self.screen.fill(self.BGCOLOR)
             self.hurdle_movement(time_count)
-            _ = self.model.update(time_count, self.hurdles, metrics)
+            performance_data = self.model.update(time_count, self.hurdles, metrics)
             self.render()
             time_count += 1
 
-        # Keep current return format (list + final time_count)
-        performance_data = [direction_mismatches]
         performance_data.append(time_count)
         return performance_data
 
