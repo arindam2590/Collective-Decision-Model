@@ -1,7 +1,8 @@
+import random
 import json
+import matplotlib.pyplot as plt
 from pathlib import Path
 from datetime import datetime
-import matplotlib.pyplot as plt
 
 FILE_NAME = 'Data/data.txt'
 
@@ -16,8 +17,12 @@ def display_simulation_config(params):
     print('#' * 60)
 
 
-def write_to_file(data):
+def _ensure_data_dir():
     Path("Data").mkdir(parents=True, exist_ok=True)
+
+
+def write_to_file(data):
+    _ensure_data_dir()
     with open(FILE_NAME, 'w') as file:
         json.dump(data, file)
 
@@ -28,93 +33,33 @@ def read_from_file():
     return data
 
 
-def plot_performance_graph(model_name: str, metrics: dict):
+def plot_performance_graph(model_name, performance_data):
     """
-    Expected metrics:
-      metrics = {
-         "time": [1,2,...,T],
-         "dir_mismatch": [[... per-agent list ...] at each logging step],
-         "consensus_counts": [{(x,y): n, ...} per logging step]  # tuple keys
-      }
+    Current pipeline returns:
+      performance_data[0] -> list of direction_mismatch lists (one list per consensus check)
+      performance_data[1] -> final time_count (int)
+
+    We plot the average direction mismatch over successive checkpoints.
     """
-    from pathlib import Path
-    Path("Data").mkdir(parents=True, exist_ok=True)
+    _ensure_data_dir()
 
-    t = metrics.get("time", [])
-    cc = metrics.get("consensus_counts", [])
-    dm = metrics.get("dir_mismatch", [])
+    if not performance_data or len(performance_data) < 1:
+        return
 
-    # Plot consensus counts by target (tuple keys kept intact)
-    if cc:
-        keys = sorted(set().union(*[d.keys() for d in cc]))
-        for k in keys:
-            series = [d.get(k, 0) for d in cc]
-            plt.plot(t[:len(series)], series, label=f"Target {k}")
-        plt.xlabel("Time step")
-        plt.ylabel("Agents favoring target")
-        plt.title(f"Consensus over time - {model_name}")
-        plt.legend()
-        out = f"Data/Consensus_{model_name.replace(' ', '_')}.png"
-        plt.tight_layout()
-        plt.savefig(out, dpi=150)
-        plt.close()
+    dir_mismatch_series = performance_data[0]  # list[list[per-agent mismatch]]
+    if not dir_mismatch_series:
+        return
 
-    # Plot average direction mismatch over logging periods
-    if dm:
-        avg_dm = [sum(row) / max(1, len(row)) for row in dm]
-        x = list(range(len(avg_dm)))
-        plt.plot(x, avg_dm, label="Avg. direction mismatch")
-        plt.xlabel("Consensus periods")
-        plt.ylabel("Mismatch (rad)")
-        plt.title(f"Direction mismatch - {model_name}")
-        plt.legend()
-        out = f"Data/DirMismatch_{model_name.replace(' ', '_')}.png"
-        plt.tight_layout()
-        plt.savefig(out, dpi=150)
-        plt.close()
+    # x-axis as checkpoints (1..N) because the raw clock isn't carried alongside
+    x = list(range(1, len(dir_mismatch_series) + 1))
+    y_avg = [sum(step) / max(len(step), 1) for step in dir_mismatch_series]
 
-
-    # Plot average direction mismatch over logging periods
-    if dm:
-        avg_dm = [sum(row) / max(1, len(row)) for row in dm]
-        # Align x values to logging instants (subset of time)
-        x = list(range(len(avg_dm)))
-        plt.plot(x, avg_dm, label="Avg. direction mismatch")
-        plt.xlabel("Consensus periods")
-        plt.ylabel("Mismatch (rad)")
-        plt.title(f"Direction mismatch - {model_name}")
-        plt.legend()
-        out = f"Data/DirMismatch_{model_name.replace(' ', '_')}.png"
-        plt.tight_layout()
-        plt.savefig(out, dpi=150)
-        plt.close()
-
-
-def simulation_init(params):
-    import random
-    env_params, swarm_params = params
-
-    Path("Data").mkdir(parents=True, exist_ok=True)
-
-    agent_init_pos = [
-        (random.uniform(0, swarm_params['START_AREA_LEN']),
-         random.uniform(env_params['SCREEN_HEIGHT'] / 3,
-                        env_params['SCREEN_HEIGHT'] / 3 + swarm_params['START_AREA_LEN']))
-        for _ in range(swarm_params['NUM_AGENTS'])
-    ]
-
-    targets = []
-    for _ in range(env_params['NUM_TARGET']):
-        target_x = env_params['SCREEN_WIDTH'] - swarm_params['STARTING_AREA_WIDTH'] - env_params['TARGET_SIZE'] / 2
-        target_y = random.uniform(50, env_params['SCREEN_HEIGHT'] - 50)
-        targets.append((target_x, target_y))
-
-    hurdles = []
-    for _ in range(env_params['NUM_HURDLE']):
-        hurdle_x = random.uniform(env_params['SCREEN_WIDTH'] / 3, env_params['SCREEN_WIDTH'] * 4 / 5)
-        hurdle_y = random.uniform(0, env_params['SCREEN_HEIGHT'] - 50)
-        amplitude = random.choice([1, 2])
-        frequency = random.uniform(0.0, 0.1)
-        hurdles.append((hurdle_x, hurdle_y, amplitude, frequency))
-
-    write_to_file([agent_init_pos, targets, hurdles])
+    plt.plot(x, y_avg, label='Avg. direction mismatch')
+    plt.xlabel('Consensus checkpoints')
+    plt.ylabel('Average mismatch (rad)')
+    plt.title(f'Direction mismatch over time – {model_name}')
+    plt.legend()
+    out = f'Data/DirectionMismatch_{model_name.replace(" ", "_")}.png'
+    plt.tight_layout()
+    plt.savefig(out, dpi=150)
+    plt.close()

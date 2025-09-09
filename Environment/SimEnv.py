@@ -26,9 +26,6 @@ class SimEnv:
         self.target_size = self.env_params['TARGET_SIZE']
         self.model = None
 
-        # Centralized metrics store
-        self.metrics = {"time": [], "dir_mismatch": [], "consensus_counts": []}
-
     def event_on_game_window(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -42,7 +39,7 @@ class SimEnv:
 
     def draw_targets(self, point):
         x, y = int(point[0]), int(point[1])
-        pygame.draw.circle(self.screen, (0, 0, 255), (x, y), int(self.target_size))
+        pygame.draw.circle(self.screen, (0, 0, 255), (x, y), self.target_size)
 
     def render(self):
         for agent in self.model.agents:
@@ -57,25 +54,30 @@ class SimEnv:
         pygame.display.flip()
         self.clock.tick(self.fps)
 
-    def run_simulation(self, hurdles, targets, max_steps=None):
+    def run_simulation(self, hurdles, targets):
         pygame.display.set_caption("Collective Decision Making of Swarm : " + self.model.Name)
 
-        # build hurdle objects
+        direction_mismatches = []
+        metrics = [direction_mismatches]  # keep existing structure
+
         for x, y, amplitude, frequency in hurdles:
             self.hurdles.append(Hurdle(x, y, amplitude, frequency))
 
+        print('=' * 60)
+        print('Model Simulation has been started...\n')
         time_count = 1
-        while self.running and (max_steps is None or time_count <= max_steps):
+        while self.running:
             self.event_on_game_window()
             self.screen.fill(self.BGCOLOR)
             self.hurdle_movement(time_count)
-            self.metrics["time"].append(time_count)
-
-            self.model.update(time_count, self.hurdles, self.metrics)
+            _ = self.model.update(time_count, self.hurdles, metrics)
             self.render()
             time_count += 1
 
-        return self.metrics
+        # Keep current return format (list + final time_count)
+        performance_data = [direction_mismatches]
+        performance_data.append(time_count)
+        return performance_data
 
     def close_sim(self):
         pygame.quit()
