@@ -25,6 +25,9 @@ class SimEnv:
         self.target_size = self.env_params['TARGET_SIZE']
         self.model = None
 
+        # NEW: per-timestep count of agents that reached any target (for plotting/saving)
+        self.reached_counts = []
+
     def event_on_game_window(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -51,18 +54,43 @@ class SimEnv:
         pygame.display.flip()
         self.clock.tick(self.fps)
 
+    def _count_agents_reached_any_target(self):
+        """Return number of agents whose position lies inside any target (within target radius)."""
+        r = float(self.target_size)
+        r2 = r * r
+        cnt = 0
+        for a in self.model.agents:
+            ax, ay = a.position
+            # inside ANY target
+            for tx, ty in self.target_object:
+                dx = ax - tx
+                dy = ay - ty
+                if dx * dx + dy * dy <= r2:
+                    cnt += 1
+                    break
+        return cnt
+
     def run_simulation(self, hurdles, targets, max_steps=0):
         pygame.display.set_caption("Collective Decision Making of Swarm : " + self.model.Name)
 
-        # Two metrics (lists of per-checkpoint per-agent values)
+        # Metrics (models will append into these)
         direction_mismatches = []
         collisions = []
-        metrics = [direction_mismatches, collisions]
+        phase_synchronization = []
+        decision_accuracy = []  # left as-is for compatibility elsewhere
+
+        if self.model.Name == 'Kuramoto Model':
+            metrics = [direction_mismatches, collisions, phase_synchronization, decision_accuracy]
+        else:
+            metrics = [direction_mismatches, collisions, decision_accuracy]
 
         # Build hurdles for this run
         self.hurdles = []
         for x, y, amplitude, frequency in hurdles:
             self.hurdles.append(Hurdle(x, y, amplitude, frequency))
+
+        # reset per-timestep reached series
+        self.reached_counts = []
 
         time_count = 1
         while self.running:
@@ -72,14 +100,17 @@ class SimEnv:
             self.screen.fill(self.BGCOLOR)
             self.hurdle_movement(time_count)
 
-            # Model appends into metrics and returns [dir_mismatch, collisions]
-            _ = self.model.update(time_count, self.hurdles, metrics)
+            # Model updates and writes into metrics
+            performance_data = self.model.update(time_count, self.hurdles, metrics)
+
+            # NEW: record per-timestep #agents that reached ANY target
+            self.reached_counts.append(self._count_agents_reached_any_target())
 
             self.render()
             time_count += 1
 
-        # Return both series like your original (plus time_count)
-        performance_data = [direction_mismatches, collisions, time_count]
+        # Keep return shape unchanged; append time_count at the end
+        performance_data.append(time_count)
         return performance_data
 
     def close_sim(self):

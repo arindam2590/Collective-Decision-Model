@@ -67,21 +67,39 @@ class KuramotoAgent(Agent):
         self.nearest_goal = None
         self.consensus_direction = 0.0
         self.has_phase_synched = True
+        self.agent_phase = 0.0
         self.coupling_strength_K = 0.0
 
     def display_agents(self, screen):
         super().draw_agents(screen)
 
     def calculate_phase_difference(self):
+        """
+        Discrete Kuramoto-style phase update:
+          dθ_i/dt = (wrap(ω_i - θ_i)) + K * (1/|N_i|) * Σ_j sin(θ_j - θ_i)
+        """
+        theta = float(self.direction)  # current phase/heading
+        phase_step = 0.2  # Δt; small, fixed step to avoid overshoot
+        K = max(float(self.coupling_strength_K), 0.0)  # your model already ramps K up
+
+        goal_turn = self._wrap_angle(float(self.omega) - theta)
+
         if self.neighbors:
-            # Use agent's current K (grown by model each consensus phase)
-            K = max(float(self.coupling_strength_K), 0.0)
-            neighbor_directions = np.array([agent.direction for agent in self.neighbors])
-            avg_phase_diff = K * np.mean(np.sin(neighbor_directions - self.direction), axis=0)
-            agent_phase = self.omega + avg_phase_diff
-            direction = np.array([np.cos(agent_phase), np.sin(agent_phase)])
-            self.consensus_direction = np.arctan2(direction[1], direction[0])
-            self.has_phase_synched = True
+            nbr = np.array([a.direction for a in self.neighbors], dtype=float)
+            coupling = float(np.mean(np.sin(nbr - theta)))
+        else:
+            coupling = 0.0
+
+        dtheta_dt = goal_turn + K * coupling
+        theta_next = theta + phase_step * dtheta_dt
+        theta_next = self._wrap_angle(theta_next)
+
+        self.agent_phase = theta_next
+        self.consensus_direction = theta_next
+        self.has_phase_synched = True
+
+    def _wrap_angle(self, x: float) -> float:
+        return np.arctan2(np.sin(x), np.cos(x))
 
     def get_nearest_goal(self, targets):
         targets = np.array(targets)

@@ -1,9 +1,26 @@
 import random
+import numpy as np
 
 from Model.ModelAgent import MajorityAgent, VoterAgent, KuramotoAgent
 
-LATENT_AGENT_COLOR = (255, 0, 0)        # Red for latent agents
-NON_LATENT_AGENT_COLOR = (0, 255, 255)  # Blue for non-latent agents
+LATENT_AGENT_COLOR = (255, 0, 0)        # Red
+NON_LATENT_AGENT_COLOR = (0, 255, 255)  # Blue
+
+
+def _decision_accuracy(agents, target_radius):
+    """Proportion of agents that are inside their selected target (agent.nearest_goal)."""
+    successes = 0
+    counted = 0
+    r2 = float(target_radius) ** 2
+    for a in agents:
+        if getattr(a, 'nearest_goal', None) is None:
+            continue
+        dx = a.position[0] - a.nearest_goal[0]
+        dy = a.position[1] - a.nearest_goal[1]
+        if dx * dx + dy * dy <= r2:
+            successes += 1
+        counted += 1
+    return (successes / counted) if counted > 0 else 0.0
 
 
 class MajorityRuleModel:
@@ -22,25 +39,26 @@ class MajorityRuleModel:
                               self.swarm_params['SEPERATION_DISTANCE'], self.swarm_params['AGENT_SPEED'], opn_count))
 
     def update(self, time_count, hurdles, metrics):
-        # metrics is [direction_mismatches, collisions]
+        # metrics: [dir_mismatch, collisions, decision_accuracy]
         direction_mismatches = metrics[0]
-        collisions = metrics[1] if len(metrics) > 1 else []
+        collisions = metrics[1]
+        decision_accuracy = metrics[2]
 
         for agent in self.agents:
             agent.get_neighbors(self.agents)
 
         if time_count % self.consensus_period == 0:
             print('Model has been updated at time: ', time_count)
-            print('Info: Opinion occurance is being counted by agents')
+            print('Info: Opinion occurrence is being counted by agents')
 
-            dir_mismatch_per_period = []
-            collision_per_period = []
+            dir_mismatch_step = []
+            collision_step = []
 
             for agent in self.agents:
                 agent.calculate_average_direction()
                 agent.compute_opinion(self.targets)
-                dir_mismatch_per_period.append(agent.calculate_dir_mismatch())
-                collision_per_period.append(agent.compute_collision_count())
+                dir_mismatch_step.append(agent.calculate_dir_mismatch())
+                collision_step.append(agent.compute_collision_count())
 
             for agent in self.agents:
                 if agent.consensus_direction is not None:
@@ -48,10 +66,14 @@ class MajorityRuleModel:
                     agent.direction = agent.consensus_direction
                     agent.has_consensus = True
 
-            direction_mismatches.append(dir_mismatch_per_period)
-            collisions.append(collision_per_period)
+            # decision-making accuracy (proportion inside selected targets)
+            acc = _decision_accuracy(self.agents, self.env_params['TARGET_SIZE'])
 
-            print('Info: Majority opinion has been selected by the agents')
+            direction_mismatches.append(dir_mismatch_step)
+            collisions.append(collision_step)
+            decision_accuracy.append([acc])  # keep shape consistent (list of scalars)
+
+            print('Info: Majority opinion selected')
             print('=' * 60)
 
         for agent in self.agents:
@@ -60,7 +82,7 @@ class MajorityRuleModel:
                 agent.color = NON_LATENT_AGENT_COLOR if agent.is_latent else LATENT_AGENT_COLOR
             agent.move(hurdles)
 
-        return [direction_mismatches, collisions]
+        return [direction_mismatches, collisions, decision_accuracy]
 
 
 class VoterModel:
@@ -79,32 +101,37 @@ class VoterModel:
                                           self.swarm_params['SEPERATION_DISTANCE'], self.swarm_params['AGENT_SPEED']))
 
     def update(self, time_count, hurdles, metrics):
+        # metrics: [dir_mismatch, collisions, decision_accuracy]
         direction_mismatches = metrics[0]
-        collisions = metrics[1] if len(metrics) > 1 else []
+        collisions = metrics[1]
+        decision_accuracy = metrics[2]
 
         for agent in self.agents:
             agent.get_neighbors(self.agents)
 
         if time_count % self.consensus_period == 0:
             print('Model has been updated at time: ', time_count)
-            print('Info: Randomly select a neighbor agent to switch the Opinion')
+            print('Info: Randomly select a neighbor agent to switch opinion')
 
-            dir_mismatch_per_period = []
-            collision_per_period = []
+            dir_mismatch_step = []
+            collision_step = []
 
             for agent in self.agents:
                 agent.calculate_average_direction()
                 if agent.consensus_direction is not None:
                     agent.compute_opinion(self.targets)
-                    # record BEFORE changing opinions/directions
-                    dir_mismatch_per_period.append(abs(agent.consensus_direction - agent.direction))
-                    collision_per_period.append(agent.compute_collision_count())
+                    dir_mismatch_step.append(abs(agent.consensus_direction - agent.direction))
+                    collision_step.append(agent.compute_collision_count())
                     agent.switch_opinion()
 
-            direction_mismatches.append(dir_mismatch_per_period)
-            collisions.append(collision_per_period)
+            # decision-making accuracy
+            acc = _decision_accuracy(self.agents, self.env_params['TARGET_SIZE'])
 
-            print('Info: Opinion has been switched with the randomly selected neighbor agents')
+            direction_mismatches.append(dir_mismatch_step)
+            collisions.append(collision_step)
+            decision_accuracy.append([acc])
+
+            print('Info: Opinion switched')
             print('=' * 60)
 
         for agent in self.agents:
@@ -113,7 +140,7 @@ class VoterModel:
                 agent.color = NON_LATENT_AGENT_COLOR if agent.is_latent else LATENT_AGENT_COLOR
             agent.move(hurdles)
 
-        return [direction_mismatches, collisions]
+        return [direction_mismatches, collisions, decision_accuracy]
 
 
 class KuramotoModel:
@@ -132,8 +159,11 @@ class KuramotoModel:
                               self.swarm_params['SEPERATION_DISTANCE'], self.swarm_params['AGENT_SPEED']))
 
     def update(self, time_count, hurdles, metrics):
+        # metrics: [dir_mismatch, collisions, phase_sync, decision_accuracy]
         direction_mismatches = metrics[0]
-        collisions = metrics[1] if len(metrics) > 1 else []
+        collisions = metrics[1]
+        phase_synchronization = metrics[2]
+        decision_accuracy = metrics[3]
 
         for agent in self.agents:
             agent.get_neighbors(self.agents)
@@ -143,25 +173,33 @@ class KuramotoModel:
             print('Model has been updated at time: ', time_count)
             print('Info: Phase (direction) of the Agent is being computed')
 
-            dir_mismatch_per_period = []
-            collision_per_period = []
+            dir_mismatch_step = []
+            collision_step = []
+            phase_step = []
 
             for agent in self.agents:
                 if agent.coupling_strength_K <= 1.0:
                     agent.has_phase_synched = False
                     agent.calculate_phase_difference()  # sets consensus_direction
-                    agent.coupling_strength_K += self.coupling_strength_increment
+                    agent.coupling_strength_K = min(agent.coupling_strength_K + self.coupling_strength_increment, 1.0)
 
                 if agent.consensus_direction is not None:
-                    # record BEFORE applying consensus update
-                    dir_mismatch_per_period.append(abs(agent.consensus_direction - agent.direction))
-                    collision_per_period.append(agent.compute_collision_count())
+                    dir_mismatch_step.append(abs(agent.consensus_direction - agent.direction))
+                    collision_step.append(agent.compute_collision_count())
+                    # store per-agent scalar (you already compute .agent_phase; averaging will be done later)
+                    phase_step.append(agent.agent_phase)
                     agent.direction = agent.consensus_direction
 
-            direction_mismatches.append(dir_mismatch_per_period)
-            collisions.append(collision_per_period)
+            # decision-making accuracy
+            acc = _decision_accuracy(self.agents, self.env_params['TARGET_SIZE'])
 
-            print('Info: Phase (direction) of the Agent has been synchronized with its neighbors')
+            direction_mismatches.append(dir_mismatch_step)
+            collisions.append(collision_step)
+            # Save per-step average (list-of-scalars acceptable in utils)
+            phase_synchronization.append(float(np.mean(phase_step)) if len(phase_step) else 0.0)
+            decision_accuracy.append([acc])
+
+            print('Info: Phase synchronized')
             print('=' * 60)
 
         for agent in self.agents:
@@ -170,4 +208,4 @@ class KuramotoModel:
                 agent.color = NON_LATENT_AGENT_COLOR if agent.is_latent else LATENT_AGENT_COLOR
             agent.move(hurdles)
 
-        return [direction_mismatches, collisions]
+        return [direction_mismatches, collisions, phase_synchronization, decision_accuracy]

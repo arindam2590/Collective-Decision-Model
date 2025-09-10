@@ -140,3 +140,14 @@ class Agent:
         dists = np.linalg.norm(self.position - neighbor_positions, axis=1)
         thr = float(self.separation_distance) if threshold is None else float(threshold)
         return int((dists < thr).sum())
+
+    # ---- READ-ONLY METRIC: has reached its selected target? ----
+    def reached_selected_target(self, target_radius: float) -> bool:
+        """
+        Return True if this agent is within target_radius of its selected target (nearest_goal).
+        Purely diagnostic; does not change movement.
+        """
+        if self.nearest_goal is None:
+            return False
+        d = np.linalg.norm(self.position - np.array(self.nearest_goal, dtype=float))
+        return d <= float(target_radius)

@@ -2,33 +2,39 @@ import argparse
 
 def setup_perser():
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('-n', '--newdata', action='store_true', help='Start simulation with new data')
-    parser.add_argument('-o', '--olddata', action='store_true', help='Start simulation with old data')
+    parser.add_argument('-n', '--newdata',
+                        action='store_true',
+                        help='Start simulation with new data')
+    parser.add_argument('-o', '--olddata',
+                        action='store_true',
+                        help='Start simulation with old data')
 
     # Model picks (single run)
     parser.add_argument('-m', '--majority', action='store_true', help='Use Majority Rule Model')
     parser.add_argument('-v', '--voter',    action='store_true', help='Use Voter Model')
     parser.add_argument('-k', '--kuramoto', action='store_true', help='Use Kuramoto Model')
 
-    # Step cap
+    # Max steps
     parser.add_argument('-t', '--max-steps', type=int, default=0,
-                        help='Maximum number of time steps (0 = until window closes)')
+                        help='Maximum number of time steps (0 = run until closed)')
 
     # Batch + CSV
     parser.add_argument('--batch', action='store_true',
-                        help='Run sweep: agents {10,20,30,40} × targets {2,10} × all models; save to CSV')
+                        help='Run sweep over agent sizes and target counts for all models; save to CSV')
     parser.add_argument('--csv-out', default='Data/sweep_results.csv',
                         help='CSV path to write when using --batch')
 
-    # Plot-only from CSV
+    # Plot-only (read CSV and build figures)
+    parser.add_argument('--csv-in', default='Data/sweep_results.csv',
+                        help='CSV path to read when plotting only')
     parser.add_argument('--plot-only', action='store_true',
                         help='Build direction-mismatch figures from CSV (no simulation)')
-    parser.add_argument('--csv-in', default='Data/sweep_results.csv',
-                        help='CSV path to read with --plot-only/--plot-collision')
-
-    # NEW: plot collision figures from CSV
     parser.add_argument('--plot-collision', action='store_true',
                         help='Build collision figures from CSV (no simulation)')
+    parser.add_argument('--plot-phase', action='store_true',
+                        help='Build phase synchronization figures (Kuramoto only)')
+    parser.add_argument('--plot-accuracy', action='store_true',
+                        help='Build decision-making accuracy figures (all models)')
 
     return parser.parse_args()
 
