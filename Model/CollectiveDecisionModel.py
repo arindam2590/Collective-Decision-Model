@@ -81,11 +81,19 @@ class VoterModel:
             print('Model has been updated at time: ', time_count)
             print('Info: Randomly select a neighbor agent to switch the Opinion')
 
+            dir_mismatch_per_period = []
             for agent in self.agents:
                 agent.calculate_average_direction()
                 if agent.consensus_direction is not None:
                     agent.compute_opinion(self.targets)
+                    # record mismatch BEFORE changing directions/opinions
+                    dir_mismatch = abs(agent.consensus_direction - agent.direction)
+                    dir_mismatch_per_period.append(dir_mismatch)
                     agent.switch_opinion()
+
+            # append one row of per-agent mismatches for this checkpoint
+            direction_mismatches.append(dir_mismatch_per_period)
+
             print('Info: Opinion has been switched with the randomly selected neighbor agents')
             print('=' * 60)
 
@@ -95,7 +103,6 @@ class VoterModel:
                 agent.color = NON_LATENT_AGENT_COLOR if agent.is_latent else LATENT_AGENT_COLOR
             agent.move(hurdles)
         return [direction_mismatches]
-
 
 class KuramotoModel:
     def __init__(self, agent_pos, targets, params):
@@ -123,15 +130,22 @@ class KuramotoModel:
             print('Model has been updated at time: ', time_count)
             print('Info: Phase (direction) of the Agent is being computed')
 
+            dir_mismatch_per_period = []
             for agent in self.agents:
                 if agent.coupling_strength_K <= 1.0:
                     agent.has_phase_synched = False
-                    # Use agent's own K (grows with increments)
-                    agent.calculate_phase_difference()  # reads agent.coupling_strength_K inside
+                    agent.calculate_phase_difference()  # computes consensus_direction using agent.coupling_strength_K
                     agent.coupling_strength_K += self.coupling_strength_increment
 
                 if agent.consensus_direction is not None:
+                    # record mismatch BEFORE applying consensus
+                    dir_mismatch = abs(agent.consensus_direction - agent.direction)
+                    dir_mismatch_per_period.append(dir_mismatch)
                     agent.direction = agent.consensus_direction
+
+            # append one row of per-agent mismatches for this checkpoint
+            direction_mismatches.append(dir_mismatch_per_period)
+
             print('Info: Phase (direction) of the Agent has been synchronized with its neighbors')
             print('=' * 60)
 
