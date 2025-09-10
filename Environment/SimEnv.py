@@ -1,5 +1,4 @@
 import pygame
-
 from Environment.SimHurdle import Hurdle
 
 
@@ -30,16 +29,14 @@ class SimEnv:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                self.running = False
 
     def hurdle_movement(self, time_count):
         for hurdle in self.hurdles:
             hurdle.update_hurdle_position(time_count)
 
     def draw_targets(self, point):
-        x, y = int(point[0]), int(point[1])
-        pygame.draw.circle(self.screen, (0, 0, 255), (x, y), self.target_size)
+        x, y = point[0], point[1]
+        pygame.draw.circle(self.screen, (0, 0, 255), (int(x), int(y)), self.target_size)
 
     def render(self):
         for agent in self.model.agents:
@@ -65,8 +62,6 @@ class SimEnv:
             x, y, amplitude, frequency = hurdle
             self.hurdles.append(Hurdle(x, y, amplitude, frequency))
 
-        print('=' * 60)
-        print('Model Simulation has been started...\n')
         time_count = 1
         while self.running:
             if max_steps > 0 and time_count > max_steps:

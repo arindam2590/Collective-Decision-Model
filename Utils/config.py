@@ -17,13 +17,27 @@ def setup_perser():
     parser.add_argument('-k', '--kuramoto',
                         action='store_true',
                         help='Use Kuramoto Model')
+
+    # already present
     parser.add_argument('-t', '--max-steps',
                         type=int,
                         default=0,
                         help='Maximum number of time steps to run (0 = run until window closed)')
-    return parser.parse_args()
 
-# Backward-compatible alias (so main.py keeps working without edits)
+    # NEW: batch sweep and CSV options
+    parser.add_argument('--batch',
+                        action='store_true',
+                        help='Run sweep: agents {10,20,30,40} × targets {2,10} for all models; save to CSV')
+    parser.add_argument('--csv-out',
+                        default='Data/sweep_results.csv',
+                        help='CSV path to save sweep results (for --batch)')
+    parser.add_argument('--plot-only',
+                        action='store_true',
+                        help='Only plot from CSV (no simulation)')
+    parser.add_argument('--csv-in',
+                        default='Data/sweep_results.csv',
+                        help='CSV path to read when using --plot-only')
+    return parser.parse_args()
 
 
 def set_params():
@@ -51,5 +65,4 @@ def set_params():
         'REPULSION_RADIUS': 50,
         'K_INCREMENT': 0.01
     }
-
     return [env_params, swarm_params]
