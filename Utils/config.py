@@ -46,7 +46,7 @@ def set_params():
         'SCREEN_HEIGHT': 700,
         'FPS': 60,
         'NUM_TARGET': 2,
-        'TARGET_SIZE': 20,
+        'TARGET_SIZE': 30,
         'NUM_HURDLE': 10
     }
 

@@ -191,7 +191,7 @@ class KuramotoModel:
                     agent.direction = agent.consensus_direction
 
             # decision-making accuracy
-            acc = _decision_accuracy(self.agents, self.env_params['TARGET_SIZE'])
+            acc = _decision_accuracy(self.agents, self.env_params['TARGET_SIZE']+10)
 
             direction_mismatches.append(dir_mismatch_step)
             collisions.append(collision_step)

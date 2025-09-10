@@ -245,7 +245,7 @@ def _read_csv_dicts(csv_path):
 
 # ---------- Plotting ----------
 
-def _plot_by_agents_targets(csv_path, value_key, fig_prefix, ylabel, ylim=None, model_filter=None, legend_title='Model'):
+def _plot_by_agents_targets(csv_path, value_key, fig_prefix, ylabel, xlabel, ylim=None, model_filter=None, legend_title='Model'):
     fields, rows_src = _read_csv_dicts(csv_path)
     if value_key not in fields:
         raise ValueError(f"CSV does not contain '{value_key}': {csv_path}")
@@ -299,8 +299,8 @@ def _plot_by_agents_targets(csv_path, value_key, fig_prefix, ylabel, ylim=None, 
                 xs, ys = zip(*data_2[m])
                 ax.plot(xs, ys, label=m)
                 plotted = True
-        ax.set_title(f'{A} agents, 2 targets')
-        ax.set_xlabel('Time steps')
+        # ax.set_title(f'{A} agents, 2 targets')
+        ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         if ylim is not None:
             ax.set_ylim(*ylim)
@@ -315,14 +315,14 @@ def _plot_by_agents_targets(csv_path, value_key, fig_prefix, ylabel, ylim=None, 
                 xs, ys = zip(*data_10[m])
                 ax.plot(xs, ys, label=m)
                 plotted = True
-        ax.set_title(f'{A} agents, 10 targets')
-        ax.set_xlabel('Time steps')
+        # ax.set_title(f'{A} agents, 10 targets')
+        ax.set_xlabel(xlabel)
         if ylim is not None:
             ax.set_ylim(*ylim)
         if plotted:
             ax.legend(title=legend_title, loc='best')
 
-        fig.suptitle(f'{ylabel} — {A} agents', fontsize=12)
+        # fig.suptitle(f'{ylabel} — {A} agents', fontsize=12)
         fig.tight_layout(rect=[0, 0, 1, 0.95])
         fig.savefig(f'Data/{fig_prefix}_{A}A_2T_vs_10T.png', dpi=150)
         plt.close(fig)
@@ -331,23 +331,23 @@ def _plot_by_agents_targets(csv_path, value_key, fig_prefix, ylabel, ylim=None, 
 # Existing comparison plots (unchanged)
 def plot_figures_from_csv(csv_path):
     _plot_by_agents_targets(csv_path, 'avg_dir_mismatch', 'DirectionMismatch',
-                            'Avg. direction mismatch (rad)', ylim=None, model_filter=None, legend_title='Model')
+                            'Avg. direction mismatch (rad)', 'Consensus Period', ylim=None, model_filter=None, legend_title='Model')
 
 
 def plot_collision_figures_from_csv(csv_path):
     _plot_by_agents_targets(csv_path, 'avg_collisions', 'Collision',
-                            'Avg. collision count per agent', ylim=None, model_filter=None, legend_title='Model')
+                            'Avg. collision count', 'Consensus Period', ylim=None, model_filter=None, legend_title='Model')
 
 
 def plot_phase_figures_from_csv(csv_path):
     _plot_by_agents_targets(csv_path, 'avg_phase_sync', 'PhaseSync',
-                            'Avg. phase sync', ylim=None, model_filter={'Kuramoto Model'}, legend_title='Kuramoto')
+                            'Avg. phase synchronization', 'Consensus Period', ylim=None, model_filter={'Kuramoto Model'}, legend_title='Kuramoto')
 
 
 # NEW: per-time-step agents reached
 def plot_reached_figures_from_csv(csv_path='Data/reached_timeseries.csv'):
     _plot_by_agents_targets(csv_path, 'agents_reached', 'AgentsReached',
-                            'Agents reached any target (count)', ylim=None, model_filter=None, legend_title='Model')
+                            'Decision Accuracy (Agent reached target)', 'Time Step', ylim=None, model_filter=None, legend_title='Model')
 
 
 # Optional single-run quick plot (unchanged)
