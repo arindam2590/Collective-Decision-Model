@@ -5,30 +5,30 @@ def setup_perser():
     parser.add_argument('-n', '--newdata', action='store_true', help='Start simulation with new data')
     parser.add_argument('-o', '--olddata', action='store_true', help='Start simulation with old data')
 
-    # choose exactly one model (-m/-v/-k), same names you already use
+    # Model picks (single run)
     parser.add_argument('-m', '--majority', action='store_true', help='Use Majority Rule Model')
     parser.add_argument('-v', '--voter',    action='store_true', help='Use Voter Model')
     parser.add_argument('-k', '--kuramoto', action='store_true', help='Use Kuramoto Model')
 
-    # cap steps per run (SimEnv already supports max_steps)
+    # Step cap
     parser.add_argument('-t', '--max-steps', type=int, default=0,
                         help='Maximum number of time steps (0 = until window closes)')
 
-    # BATCH & PLOT-ONLY
+    # Batch + CSV
     parser.add_argument('--batch', action='store_true',
-                        help='Run sweep for agents {10,20,30,40} × targets {2,10} for all models; save to CSV')
+                        help='Run sweep: agents {10,20,30,40} × targets {2,10} × all models; save to CSV')
     parser.add_argument('--csv-out', default='Data/sweep_results.csv',
                         help='CSV path to write when using --batch')
-    parser.add_argument('--plot-only', action='store_true',
-                        help='Only build figures from CSV (no simulation)')
-    parser.add_argument('--csv-in', default='Data/sweep_results.csv',
-                        help='CSV path to read with --plot-only')
 
-    # rendering toggle (single runs); batch will force headless
-    render_group = parser.add_mutually_exclusive_group()
-    render_group.add_argument('--render',   dest='render', action='store_true',  help='Enable windowed rendering')
-    render_group.add_argument('--headless', dest='render', action='store_false', help='Disable rendering (dummy SDL)')
-    parser.set_defaults(render=True)
+    # Plot-only from CSV
+    parser.add_argument('--plot-only', action='store_true',
+                        help='Build direction-mismatch figures from CSV (no simulation)')
+    parser.add_argument('--csv-in', default='Data/sweep_results.csv',
+                        help='CSV path to read with --plot-only/--plot-collision')
+
+    # NEW: plot collision figures from CSV
+    parser.add_argument('--plot-collision', action='store_true',
+                        help='Build collision figures from CSV (no simulation)')
 
     return parser.parse_args()
 

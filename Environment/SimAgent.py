@@ -53,7 +53,6 @@ class Agent:
         self.consensus_direction = np.arctan2(direction[1], direction[0])
 
     def compute_opinion(self, targets):
-        # Keep same logic; compute nearest goal to current position
         targets = np.array(targets)
         distance_to_goal = np.linalg.norm(targets - self.position, axis=1)
         nearest_goal_index = np.argmin(distance_to_goal)
@@ -64,7 +63,6 @@ class Agent:
             return np.zeros(2, dtype=float)
         neighbor_directions = np.array([agent.direction for agent in self.neighbors])
         avg_direction = circ_mean(neighbor_directions)
-        # angle difference mapped to a 2D vector for force composition
         dtheta = angle_diff(avg_direction, self.direction)
         return np.array([np.cos(self.direction + dtheta), np.sin(self.direction + dtheta)]) - \
                np.array([np.cos(self.direction), np.sin(self.direction)])
@@ -129,3 +127,16 @@ class Agent:
                 repulsion_factor = (self.repulsion_radius - dist) / dist
                 self.position[0] -= repulsion_factor * dx
                 self.position[1] -= repulsion_factor * dy
+
+    # ---- READ-ONLY METRIC: collision count (no movement change) ----
+    def compute_collision_count(self, threshold=None):
+        """
+        Count neighbors within a 'too-close' threshold.
+        Default: SEPERATION_DISTANCE (soft collision zone).
+        """
+        if not self.neighbors:
+            return 0
+        neighbor_positions = np.array([a.position for a in self.neighbors])
+        dists = np.linalg.norm(self.position - neighbor_positions, axis=1)
+        thr = float(self.separation_distance) if threshold is None else float(threshold)
+        return int((dists < thr).sum())

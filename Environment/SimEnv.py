@@ -1,24 +1,18 @@
-# Environment/SimEnv.py
 import pygame
 from Environment.SimHurdle import Hurdle
 
-class SimEnv:
-    def __init__(self, params, targets, render=True, FULSCRN=False):  # NEW: render flag
-        self.render_enabled = render                                   # NEW
-        pygame.init()
 
+class SimEnv:
+    def __init__(self, params, targets, FULSCRN=False):
+        pygame.init()
         self.env_params, self.swarm_params = params
         self.win_height, self.win_width = self.env_params['SCREEN_HEIGHT'], self.env_params['SCREEN_WIDTH']
 
-        if self.render_enabled:
-            if FULSCRN:
-                resol = (pygame.display.Info().current_w, pygame.display.Info().current_h)
-                self.screen = pygame.display.set_mode(resol, pygame.SCALED)
-            else:
-                self.screen = pygame.display.set_mode((self.win_width, self.win_height), pygame.RESIZABLE)
+        if FULSCRN:
+            resol = (pygame.display.Info().current_w, pygame.display.Info().current_h)
+            self.screen = pygame.display.set_mode(resol, pygame.SCALED)
         else:
-            # Headless: draw onto an offscreen Surface (no window)
-            self.screen = pygame.Surface((self.win_width, self.win_height))
+            self.screen = pygame.display.set_mode((self.win_width, self.win_height), pygame.RESIZABLE)
 
         self.BGCOLOR = (255, 255, 255)
         self.clock = pygame.time.Clock()
@@ -32,8 +26,6 @@ class SimEnv:
         self.model = None
 
     def event_on_game_window(self):
-        if not self.render_enabled:
-            return  # no event pump needed when headless
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -56,48 +48,38 @@ class SimEnv:
         for target_point in self.target_object:
             self.draw_targets(target_point)
 
-        if self.render_enabled:
-            pygame.display.flip()
+        pygame.display.flip()
         self.clock.tick(self.fps)
 
-    # Environment/SimEnv.py
-
     def run_simulation(self, hurdles, targets, max_steps=0):
-        import pygame
-        from Environment.SimHurdle import Hurdle
+        pygame.display.set_caption("Collective Decision Making of Swarm : " + self.model.Name)
 
-        # (Title only matters if you’re rendering)
-        try:
-            pygame.display.set_caption("Collective Decision Making of Swarm : " + self.model.Name)
-        except Exception:
-            pass
-
+        # Two metrics (lists of per-checkpoint per-agent values)
         direction_mismatches = []
-        performance_data = []
-        metrics = [direction_mismatches]
+        collisions = []
+        metrics = [direction_mismatches, collisions]
 
-        # (Re)build hurdles list
+        # Build hurdles for this run
         self.hurdles = []
         for x, y, amplitude, frequency in hurdles:
             self.hurdles.append(Hurdle(x, y, amplitude, frequency))
 
         time_count = 1
         while self.running:
-            # Respect max_steps if provided (>0)
             if max_steps and time_count > max_steps:
                 break
-
             self.event_on_game_window()
             self.screen.fill(self.BGCOLOR)
             self.hurdle_movement(time_count)
 
-            # Your model returns performance_data in the same shape as before
-            performance_data = self.model.update(time_count, self.hurdles, metrics)
+            # Model appends into metrics and returns [dir_mismatch, collisions]
+            _ = self.model.update(time_count, self.hurdles, metrics)
 
             self.render()
             time_count += 1
 
-        performance_data.append(time_count)
+        # Return both series like your original (plus time_count)
+        performance_data = [direction_mismatches, collisions, time_count]
         return performance_data
 
     def close_sim(self):
