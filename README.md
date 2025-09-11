@@ -38,6 +38,12 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
   - **Direction mismatch**
   - **Collision count**
   - **Phase synchronization** (Kuramoto only)
-  - *(optional, if present in your `Utils.utils`)* agents reached per time step
+  - **Decision Making Accuracy** (number of agents reached target per time step)
 
 ---
+
+## Repository Structure
+
+> Minor naming differences are ok (e.g., `Model` vs `Models`) — use whatever your local code has.
+
+.
