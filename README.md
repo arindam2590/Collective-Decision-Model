@@ -27,3 +27,17 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
 - [License](#license)
 
 ---
+
+## Features
+
+- Flocking dynamics (cohesion / separation / alignment) + target pursuit + obstacle avoidance.
+- Three decision / consensus models: **Majority**, **Voter**, **Kuramoto**.
+- Periodic “consensus checkpoints” (every `CONSENSUS_PERIOD` steps) where metrics are sampled.
+- Batch sweep across **agents ∈ {10,20,30,40} × targets ∈ {2,10} × models**.
+- CSV logging and comparison plots:
+  - **Direction mismatch**
+  - **Collision count**
+  - **Phase synchronization** (Kuramoto only)
+  - *(optional, if present in your `Utils.utils`)* agents reached per time step
+
+---
