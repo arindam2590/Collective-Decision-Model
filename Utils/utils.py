@@ -299,7 +299,7 @@ def _plot_by_agents_targets(csv_path, value_key, fig_prefix, ylabel, xlabel, yli
                 xs, ys = zip(*data_2[m])
                 ax.plot(xs, ys, label=m)
                 plotted = True
-        # ax.set_title(f'{A} agents, 2 targets')
+        ax.set_title(f'{A} agents, 2 targets')
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         if ylim is not None:
@@ -315,7 +315,7 @@ def _plot_by_agents_targets(csv_path, value_key, fig_prefix, ylabel, xlabel, yli
                 xs, ys = zip(*data_10[m])
                 ax.plot(xs, ys, label=m)
                 plotted = True
-        # ax.set_title(f'{A} agents, 10 targets')
+        ax.set_title(f'{A} agents, 10 targets')
         ax.set_xlabel(xlabel)
         if ylim is not None:
             ax.set_ylim(*ylim)
