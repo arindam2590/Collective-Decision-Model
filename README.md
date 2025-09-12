@@ -45,9 +45,7 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
 ## Repository Structure
 
 > Minor naming differences are ok (e.g., `Model` vs `Models`) — use whatever your local code has.
-
 .
-
 ├─ main.py
 ├─ config.py # argparse / default params (or: Utils/config.py in some setups)
 ├─ Environment/
