@@ -14,7 +14,6 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
 
 - [Features](#features)
 - [Repository Structure](#repository-structure)
-- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [CLI Usage](#cli-usage)
 - [Batch Sweep](#batch-sweep)
@@ -73,3 +72,17 @@ python main.py -v
 
 # Kuramoto model
 python main.py -k
+```
+
+Limit the run length:
+
+```bash
+python main.py -k -t 600
+```
+
+Use previously saved initial conditions:
+
+```bash
+python main.py -o -k
+```
+(Use `-n to generate new data, if your version supports it.)
