@@ -44,6 +44,19 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
 
 ## Repository Structure
 
+    ```bash
+    .
+    ├── src/
+    │   ├── main.py
+    │   └── utils/
+    │       └── helper.py
+    ├── tests/
+    │   └── test_main.py
+    ├── README.md
+    └── requirements.txt
+
+
+
 > Minor naming differences are ok (e.g., `Model` vs `Models`) — use whatever your local code has.
 .
 ├─ main.py
