@@ -55,7 +55,7 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
     ├── README.md
     └── requirements.txt
 
-
+tree \
 
 > Minor naming differences are ok (e.g., `Model` vs `Models`) — use whatever your local code has.
 .
