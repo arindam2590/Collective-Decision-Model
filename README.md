@@ -85,4 +85,4 @@ Use previously saved initial conditions:
 ```bash
 python main.py -o -k
 ```
-(Use `-n to generate new data, if your version supports it.)
+(Use `-n` to generate new data, if your version supports it.)
