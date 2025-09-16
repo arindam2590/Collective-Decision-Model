@@ -44,36 +44,32 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
 
 ## Repository Structure
     .
-    ├── 
+    ├── Data/
+    │   └── data.txt
     ├── Environment/
-    │   ├── main.py
+    │   ├── SimAgent.py
     │   ├── SimEnv.py
     │   ├── SimHurdle.py
-    │   └── utils/
-    │       └── helper.py
+    │   └── __init__.py
     ├── Models/
     │   ├── CollectiveDecisionModel.py
     │   └── ModelAgent.py
     ├── Utils/
     │   ├── utils.py
     │   └── config.json
-    │    
     ├── README.md
     ├── main.py
     └── requirements.txt 
+## Quick Start
 
-> Minor naming differences are ok (e.g., `Model` vs `Models`) — use whatever your local code has.
-.
-├─ main.py
-├─ config.py # argparse / default params (or: Utils/config.py in some setups)
-├─ Environment/
-│ ├─ SimEnv.py # pygame loop, rendering, time-step logic
-│ └─ SimHurdle.py # simple moving obstacles
-├─ Models/ # or: Model/
-│ ├─ CollectiveDecisionModel.py # MajorityRuleModel / VoterModel / KuramotoModel
-│ └─ ModelAgent.py # Agent classes / helpers used by each model
-├─ Utils/
-│ └─ utils.py # init scenario, CSV I/O, metric averaging, plotting helpers
-├─ Data/ # auto-created; CSV + figures land here
-└─ scripts/
-└─ write_readme.py # (optional) script that writes this README.md
+Run a single interactive sim (window opens) with a chosen model:
+
+```bash
+# Majority model
+python main.py -m
+
+# Voter model
+python main.py -v
+
+# Kuramoto model
+python main.py -k
