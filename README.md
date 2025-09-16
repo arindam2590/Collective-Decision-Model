@@ -43,16 +43,23 @@ The simulator runs in **pygame**, logs per–consensus-checkpoint metrics to CSV
 ---
 
 ## Repository Structure
-
-    ```bash
     .
-    ├── src/
+    ├── 
+    ├── Environment/
     │   ├── main.py
+    │   ├── SimEnv.py
+    │   ├── SimHurdle.py
     │   └── utils/
     │       └── helper.py
-    ├── tests/
-    │   └── test_main.py
+    ├── Models/
+    │   ├── CollectiveDecisionModel.py
+    │   └── ModelAgent.py
+    ├── Utils/
+    │   ├── utils.py
+    │   └── config.json
+    │    
     ├── README.md
+    ├── main.py
     └── requirements.txt 
 
 > Minor naming differences are ok (e.g., `Model` vs `Models`) — use whatever your local code has.
