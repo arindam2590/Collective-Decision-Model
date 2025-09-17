@@ -86,3 +86,23 @@ Use previously saved initial conditions:
 python main.py -o -k
 ```
 (Use `-n` to generate new data, if your version supports it.)
+
+## CLI Usage
+
+Common flags available in the current codebase (names may live in `config.py` or `Utils/config.py`):
+- `-m / --majority` : Majority Rule
+- `-v / --voter` : Voter Model
+-
+-
+- 
+Examples:
+
+```bash
+# Batch sweep + CSV
+python main.py --batch -t 600 --csv-out Data/sweep_results.csv
+
+# Plot (from CSV) without re-simulating
+python main.py --plot-only      --csv-in Data/sweep_results.csv   # direction mismatch
+python main.py --plot-collision --csv-in Data/sweep_results.csv   # collisions
+python main.py --plot-phase     --csv-in Data/sweep_results.csv   # phase sync (Kuramoto)
+```
